@@ -1,5 +1,6 @@
 import pip._vendor.requests as requests
 import time
+import json
 
 def create_locations_table(sql_connection, table_name):
     cursor = sql_connection.cursor()
@@ -34,7 +35,10 @@ def update_population_by_name_csv(sql_connection, table_name, generator_csv):
 
 
 def get_location_center(location_name):
-    url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{location_name}.json?country=by&access_token=pk.eyJ1IjoicmVxdmVsIiwiYSI6ImNrd2F2dmc4eDE2ODUydXFtdnp1c3V1bnUifQ.Ag4Rol9WaA-ssGznVCUXVA"
+    with open('private.json', 'r') as openfile:
+        json_object = json.load(openfile)
+    mapbox_access_token = json_object["mapbox_access_token"]
+    url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{location_name}.json?country=by&access_token={mapbox_access_token}"
     json_data = requests.get(url).json()
     if(json_data and json_data['features']):
         for res in json_data['features']:
@@ -66,4 +70,18 @@ def insert_location_center(sql_connection, table_name):
                 WHERE id = ?
             """, (longitude, latitude, id))
         time.sleep(1)
+    sql_connection.commit()
+
+
+def select_all(sql_connection, table_name):
+    cursor = sql_connection.cursor()
+    cursor.execute(f"""
+        SELECT DISTINCT name, longitude, latitude, population
+        FROM {table_name} 
+        WHERE (population and longitude and latitude) IS NOT NULL""")
+    # print(len(cursor.fetchall()))
+    for row in cursor:
+        print(row)
+    # names = list(map(lambda x: x[0], cursor.description))
+    # print(names)
     sql_connection.commit()
