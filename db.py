@@ -1,4 +1,5 @@
 import pip._vendor.requests as requests
+import time
 
 def create_locations_table(sql_connection, table_name):
     cursor = sql_connection.cursor()
@@ -45,3 +46,24 @@ def get_location_center(location_name):
                 return res['center']
     # else: print("*** DATA IS NULL ***")
     return None
+
+
+def insert_location_center(sql_connection, table_name):
+    cursor = sql_connection.cursor()
+    update_cursor = sql_connection.cursor()
+    cursor.execute(f"SELECT * FROM {table_name} WHERE population IS NOT NULL")
+    for row in cursor:
+        id = row[0]
+        location_name = row[1]
+        center = get_location_center(location_name)
+        if(center):
+            longitude = center[0]
+            latitude = center[1]
+
+            update_cursor.execute(f"""
+                UPDATE {table_name}
+                SET longitude = ?, latitude = ?
+                WHERE id = ?
+            """, (longitude, latitude, id))
+        time.sleep(1)
+    sql_connection.commit()
