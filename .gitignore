@@ -1,5 +1,6 @@
 csvs/
 *.csv
 *.db
+*.json
 __pycache__/
 .vscode/
