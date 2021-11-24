@@ -17,3 +17,14 @@ def insert_data_csv(sql_connection, table_name, column, arr_i, generator_csv):
     for arr in generator_csv:
         cursor.execute(f"INSERT INTO {table_name} ({column}) VALUES (?)", (arr[arr_i],))
     sql_connection.commit()
+
+
+def update_population_by_name_csv(sql_connection, table_name, generator_csv):
+    cursor = sql_connection.cursor()
+    for arr in generator_csv:
+        cursor.execute(f"""
+            UPDATE {table_name}
+            SET population = ?
+            WHERE name = ?
+        """, (arr[3], arr[2]))
+    sql_connection.commit()
