@@ -1,3 +1,5 @@
+import pip._vendor.requests as requests
+
 def create_locations_table(sql_connection, table_name):
     cursor = sql_connection.cursor()
     cursor.execute(f"""
@@ -28,3 +30,18 @@ def update_population_by_name_csv(sql_connection, table_name, generator_csv):
             WHERE name = ?
         """, (arr[3], arr[2]))
     sql_connection.commit()
+
+
+def get_location_center(location_name):
+    url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{location_name}.json?country=by&access_token=pk.eyJ1IjoicmVxdmVsIiwiYSI6ImNrd2F2dmc4eDE2ODUydXFtdnp1c3V1bnUifQ.Ag4Rol9WaA-ssGznVCUXVA"
+    json_data = requests.get(url).json()
+    if(json_data and json_data['features']):
+        for res in json_data['features']:
+            if(res['text'] == location_name):
+                # print(f"place_name : {res['place_name']}")
+                # print(f"text : {res['text']}")
+                # print(f"center : {res['center']}")
+                # print('\n\n')
+                return res['center']
+    # else: print("*** DATA IS NULL ***")
+    return None
