@@ -32,6 +32,19 @@ class DB:
         """)
         self._sql_connection.commit()
 
+    
+    def create_durations_table(self, table_name: str) -> None:
+        cursor = self._sql_connection.cursor()
+        cursor.execute(f"""
+            CREATE TABLE {table_name} (
+                id INTEGER PRIMARY KEY,
+                a_location_id INTEGER NOT NULL,
+                b_location_id INTEGER NOT NULL,
+                duration REAL
+            )
+        """)
+        self._sql_connection.commit()
+
 
     def insert_data_csv(self, table_name: str, column: str, arr_i: int, generator_csv) -> None:
         cursor = self._sql_connection.cursor()
@@ -74,6 +87,9 @@ class DB:
                     WHERE id = ?
                 """, (longitude, latitude, id))
         self._sql_connection.commit()
+
+    
+
 
 
     def select_all_with_conditions(self, table_name: str) -> Cursor:
