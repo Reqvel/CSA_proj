@@ -1,22 +1,22 @@
-import plotly.graph_objects as go
-import pandas as pd
+from pandas.core.frame import DataFrame
+import plotly.express as px
 
-def show_locations(sql_connection, table_name):
-    data_frame = pd.read_sql(f"""
-        SELECT DISTINCT name, longitude, latitude, population
-        FROM {table_name} 
-        WHERE (population and longitude and latitude) IS NOT NULL""",
-        sql_connection)
-
-    fig = go.Figure(data=go.Scattergeo(
-        lon = data_frame['longitude'],
-        lat = data_frame['latitude'],
-        text = data_frame['name'],
-        mode = 'markers'
-    ))
+def show_locations(data_frame: DataFrame, mapbox_token: str) -> None:
+    fig = px.scatter_mapbox(
+        data_frame, 
+        lat='latitude', 
+        lon='longitude', 
+        hover_name='name',
+        hover_data=['population'],
+        color_discrete_sequence=["fuchsia"],
+        zoom=6)
 
     fig.update_layout(
         title = 'Belarus locations',
+        mapbox_style='dark', mapbox_accesstoken=mapbox_token,
         geo_scope='europe',
     )
+
+    fig.update_layout(margin={"r":0,"t":100,"l":0,"b":0})
+
     fig.show()
