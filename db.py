@@ -1,5 +1,7 @@
 from sqlite3.dbapi2 import Cursor
 import sqlite3
+import pandas as pd
+from pandas.core.frame import DataFrame
 
 class DB:
     def __init__(self, db_name: str) -> None:
@@ -79,3 +81,13 @@ class DB:
             SELECT *
             FROM {table_name}""")
         return cursor
+
+    
+    def get_pandas_df(self, table_name: str) -> DataFrame:
+        data_frame = pd.read_sql(f"""
+        SELECT DISTINCT name, longitude, latitude, population
+        FROM {table_name} 
+        WHERE (population and longitude and latitude) IS NOT NULL""",
+        self.sql_connection)
+
+        return data_frame
