@@ -1,3 +1,4 @@
+from asyncio import tasks
 from sqlite3.dbapi2 import Cursor
 import sqlite3
 import pandas as pd
@@ -40,7 +41,7 @@ class DB:
                 id INTEGER PRIMARY KEY,
                 a_location_id INTEGER NOT NULL,
                 b_location_id INTEGER NOT NULL,
-                duration REAL
+                duration_hours REAL
             )
         """)
         self._sql_connection.commit()
@@ -89,6 +90,22 @@ class DB:
         self._sql_connection.commit()
 
     
+    async def init_durations_table(self, table_name: str, locations: Cursor):
+        locations_list = locations.fetchall()
+
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+            for a_location in locations_list:
+                a_id = a_location[0]
+                a_lon = a_location[2]
+                a_lat = a_location[3]
+
+                for b_location in locations_list:
+                    b_id = b_location[0]
+                    b_lon = b_location[2]
+                    b_lat = b_location[3]
+
+                    task = asyncio.ensure_future()
 
 
 
