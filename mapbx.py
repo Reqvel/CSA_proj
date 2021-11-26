@@ -18,7 +18,7 @@ class MapBx:
         self._mapbox_access_token = json_object[self.access_token_key]
 
 
-    async def get_location_center(self, session, location_name: str) -> tuple:
+    async def get_location_center(self, session, location_name: str, id: int) -> tuple:
         url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{location_name}.json?country=by&access_token={self._mapbox_access_token}"
         
         async with session.get(url) as response:
@@ -28,8 +28,8 @@ class MapBx:
                     if(res['text'] == location_name):
                         longitude = res['center'][0]
                         latitude = res['center'][1]
-                        return longitude, latitude
-            return None, None
+                        return id, longitude, latitude
+            return id, None, None
 
 
     def get_token(self):
