@@ -88,6 +88,6 @@ class DB:
         SELECT DISTINCT name, longitude, latitude, population
         FROM {table_name} 
         WHERE (population and longitude and latitude) IS NOT NULL""",
-        self.sql_connection)
+        self._sql_connection)
 
         return data_frame
