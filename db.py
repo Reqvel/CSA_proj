@@ -2,6 +2,8 @@ from sqlite3.dbapi2 import Cursor
 import sqlite3
 import pandas as pd
 from pandas.core.frame import DataFrame
+import asyncio
+import aiohttp
 
 class DB:
     def __init__(self, db_name: str) -> None:
@@ -49,14 +51,22 @@ class DB:
         self._sql_connection.commit()
 
 
-    def update_location_center(self, table_name: str, get_lon_lat: callable, info: bool=False) -> None:
+    async def update_location_center(self, table_name: str, get_lon_lat: callable) -> None:
         cursor = self._sql_connection.cursor()
         update_cursor = self._sql_connection.cursor()
         cursor.execute(f"SELECT * FROM {table_name} WHERE population IS NOT NULL")
-        for row in cursor:
-            id = row[0]
-            location_name = row[1]
-            longitude, latitude = get_lon_lat(location_name, info)
+
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+            for row in cursor:
+                id = row[0]
+                location_name = row[1]
+                task = asyncio.ensure_future(get_lon_lat(session, location_name, id))
+                tasks.append(task)
+
+            results = await asyncio.gather(*tasks)
+        
+        for id, longitude, latitude in results:
             if(longitude and latitude):
                 update_cursor.execute(f"""
                     UPDATE {table_name}
