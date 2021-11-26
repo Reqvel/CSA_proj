@@ -2,6 +2,7 @@ from db import DB
 from mapbx import MapBx
 from visuals import *
 import csv
+import asyncio
 
 def get_generator_csv(file_name, delimiter, skip_rows):
     with open(file_name, 'r', encoding="UTF8", errors='ignore') as csv_file:
@@ -27,7 +28,11 @@ def main():
         db.insert_data_csv(locations_table_name, 'name', 9, generator_csv)
         generator_csv = get_generator_csv('csvs/population_by_0.csv', ',', 2)
         db.update_population_by_name_csv(locations_table_name, generator_csv)
-        db.update_location_center(locations_table_name, mpbx.get_location_center, info=False)
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        asyncio.run(db.update_location_center(locations_table_name, mpbx.get_location_center))
+
+    data_frame = db.get_pandas_df(locations_table_name)
+    show_locations(data_frame, mpbx.get_token())
 
     db.disconnect()
 
