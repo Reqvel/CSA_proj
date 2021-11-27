@@ -45,7 +45,7 @@ class MapBx:
 
         async with session.get(url) as response:
             json_data = await response.json()
-            if(json_data['code'] == 'Ok'):
+            if('code' in json_data and json_data['code'] == 'Ok'):
                 duration = json_data['trips'][0]['duration']
                 return a_id, b_id, duration
         
