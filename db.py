@@ -90,7 +90,7 @@ class DB:
         self._sql_connection.commit()
 
     
-    async def init_durations_table(self, table_name: str, locations: Cursor):
+    async def init_durations_table(self, table_name: str, locations: Cursor, get_duration: callable):
         locations_list = locations.fetchall()
 
         async with aiohttp.ClientSession() as session:
@@ -105,14 +105,34 @@ class DB:
                     b_lon = b_location[2]
                     b_lat = b_location[3]
 
-                    task = asyncio.ensure_future()
+                    task = asyncio.ensure_future(get_duration(
+                        session,
+                        a_id,
+                        a_lon,
+                        a_lat,
+                        b_id,
+                        b_lon,
+                        b_lat
+                    ))
+                    tasks.append(task)
 
+            results = await asyncio.gather(*tasks)
+
+        update_cursor = self._sql_connection.cursor()
+        for a_id, b_id, duration in results:
+            duration_hours = duration / 3600
+            update_cursor.execute(f"""
+                    UPDATE {table_name}
+                    SET a_location_id = ?, b_location_id = ?, duration_hours = ?
+                    WHERE id = ?
+                """, (a_id, b_id, duration_hours))
+        self._sql_connection.commit()
 
 
     def select_all_with_conditions(self, table_name: str) -> Cursor:
         cursor = self._sql_connection.cursor()
         cursor.execute(f"""
-            SELECT DISTINCT name, longitude, latitude, population
+            SELECT *
             FROM {table_name} 
             WHERE (population and longitude and latitude) IS NOT NULL""")
         return cursor
