@@ -1,7 +1,6 @@
-import asyncio
-import aiohttp
-import pip._vendor.requests as requests
 import json
+
+from numpy import double
 
 class MapBx:
     _mapbox_access_token = None
@@ -31,6 +30,26 @@ class MapBx:
                         return id, longitude, latitude
             return id, None, None
 
+
+    async def get_duration(
+        self,
+        session,
+        a_id: int, 
+        a_lon: float,
+        a_lat: float,
+        b_id: int, 
+        b_lon: float,
+        b_lat: float) -> tuple:
+
+        url = f"https://api.mapbox.com/optimized-trips/v1/mapbox/driving/{a_lon},{a_lat};{b_lon},{b_lat}?access_token={self._mapbox_access_token}"
+
+        async with session.get(url) as response:
+            json_data = await response.json()
+            if(json_data['code'] == 'Ok'):
+                duration = json_data['trips'][0]['duration']
+                return a_id, b_id, duration
+        
+        return a_id, b_id, None
 
     def get_token(self):
         return self._mapbox_access_token
