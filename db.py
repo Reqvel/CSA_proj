@@ -1,10 +1,10 @@
-from asyncio import tasks
 from sqlite3.dbapi2 import Cursor
 import sqlite3
 import pandas as pd
 from pandas.core.frame import DataFrame
 import asyncio
 import aiohttp
+import time
 
 class DB:
     def __init__(self, db_name: str) -> None:
@@ -115,16 +115,18 @@ class DB:
                         b_lat
                     ))
                     tasks.append(task)
+                time.sleep(0.1)
 
             results = await asyncio.gather(*tasks)
 
         update_cursor = self._sql_connection.cursor()
         for a_id, b_id, duration in results:
-            duration_hours = duration / 3600
+            duration_hours = None
+            if(duration):
+                duration_hours = duration / 3600
             update_cursor.execute(f"""
-                    UPDATE {table_name}
-                    SET a_location_id = ?, b_location_id = ?, duration_hours = ?
-                    WHERE id = ?
+                    INSERT INTO {table_name}(a_location_id, b_location_id, duration_hours)
+                    VALUES(?,?,?)
                 """, (a_id, b_id, duration_hours))
         self._sql_connection.commit()
 
