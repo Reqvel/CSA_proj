@@ -140,6 +140,15 @@ class DB:
         return cursor
 
     
+    def select_locations_ids_with_conditions(self, table_name: str) -> Cursor:
+        cursor = self._sql_connection.cursor()
+        cursor.execute(f"""
+            SELECT id
+            FROM {table_name} 
+            WHERE (population and longitude and latitude) IS NOT NULL""")
+        return cursor
+
+    
     def select_all(self, table_name: str) -> Cursor:
         cursor = self._sql_connection.cursor()
         cursor.execute(f"""
@@ -150,7 +159,7 @@ class DB:
     
     def get_locations_pandas_df(self, table_name: str) -> DataFrame:
         data_frame = pd.read_sql(f"""
-        SELECT DISTINCT name, longitude, latitude, population
+        SELECT *
         FROM {table_name} 
         WHERE (population and longitude and latitude) IS NOT NULL""",
         self._sql_connection)
