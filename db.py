@@ -148,11 +148,19 @@ class DB:
         return cursor
 
     
-    def get_pandas_df(self, table_name: str) -> DataFrame:
+    def get_locations_pandas_df(self, table_name: str) -> DataFrame:
         data_frame = pd.read_sql(f"""
         SELECT DISTINCT name, longitude, latitude, population
         FROM {table_name} 
         WHERE (population and longitude and latitude) IS NOT NULL""",
+        self._sql_connection)
+
+        return data_frame
+
+    def get_durations_pandas_df(self, table_name: str) -> DataFrame:
+        data_frame = pd.read_sql(f"""
+        SELECT a_location_id, b_location_id, duration_hours
+        FROM {table_name}""",
         self._sql_connection)
 
         return data_frame
