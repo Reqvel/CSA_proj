@@ -33,7 +33,13 @@ class DB:
         """)
         self._sql_connection.commit()
 
+
+    def drop_table(self, table_name: str) -> None:
+        cursor = self._sql_connection.cursor()
+        cursor.execute("DROP TABLE IF EXISTS " + table_name)
+        self._sql_connection.commit()
     
+
     def create_durations_table(self, table_name: str) -> None:
         cursor = self._sql_connection.cursor()
         cursor.execute(f"""
@@ -65,7 +71,7 @@ class DB:
         self._sql_connection.commit()
 
 
-    async def update_location_center(self, table_name: str, get_lon_lat: callable) -> None:
+    async def update_location_center_async(self, table_name: str, get_lon_lat_async: callable) -> None:
         cursor = self._sql_connection.cursor()
         update_cursor = self._sql_connection.cursor()
         cursor.execute(f"SELECT * FROM {table_name} WHERE population IS NOT NULL")
@@ -75,7 +81,7 @@ class DB:
             for row in cursor:
                 id = row[0]
                 location_name = row[1]
-                task = asyncio.ensure_future(get_lon_lat(session, location_name, id))
+                task = asyncio.ensure_future(get_lon_lat_async(session, location_name, id))
                 tasks.append(task)
 
             results = await asyncio.gather(*tasks)
@@ -89,8 +95,30 @@ class DB:
                 """, (longitude, latitude, id))
         self._sql_connection.commit()
 
+
+    def update_location_center(self, table_name: str, get_lon_lat: callable) -> None:
+        cursor = self._sql_connection.cursor()
+        update_cursor = self._sql_connection.cursor()
+        cursor.execute(f"SELECT * FROM {table_name}") # WHERE population IS NOT NULL
+
+        results = []
+        for row in cursor:
+            id = row[0]
+            location_name = row[1]
+            result = get_lon_lat(location_name, id)
+            results.append(result)
+        
+        for id, longitude, latitude in results:
+            if(longitude and latitude):
+                update_cursor.execute(f"""
+                    UPDATE {table_name}
+                    SET longitude = ?, latitude = ?
+                    WHERE id = ?
+                """, (longitude, latitude, id))
+        self._sql_connection.commit()
+
     
-    async def init_durations_table(self, table_name: str, locations: Cursor, get_duration: callable):
+    async def init_durations_table_async(self, table_name: str, locations: Cursor, get_duration: callable):
         locations_list = locations.fetchall()
 
         async with aiohttp.ClientSession() as session:
@@ -115,7 +143,6 @@ class DB:
                         b_lat
                     ))
                     tasks.append(task)
-                time.sleep(0.1)
 
             results = await asyncio.gather(*tasks)
 
@@ -136,7 +163,7 @@ class DB:
         cursor.execute(f"""
             SELECT *
             FROM {table_name} 
-            WHERE (population and longitude and latitude) IS NOT NULL""")
+            WHERE (longitude and latitude) IS NOT NULL""")
         return cursor
 
     
@@ -161,7 +188,7 @@ class DB:
         data_frame = pd.read_sql(f"""
         SELECT *
         FROM {table_name} 
-        WHERE (population and longitude and latitude) IS NOT NULL""",
+        WHERE (longitude and latitude) IS NOT NULL""", # population and 
         self._sql_connection)
 
         return data_frame
@@ -169,7 +196,8 @@ class DB:
     def get_durations_pandas_df(self, table_name: str) -> DataFrame:
         data_frame = pd.read_sql(f"""
         SELECT a_location_id, b_location_id, duration_hours
-        FROM {table_name}""",
+        FROM {table_name}
+        WHERE duration_hours IS NOT NULL""",
         self._sql_connection)
 
         return data_frame
