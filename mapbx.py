@@ -1,5 +1,6 @@
 import json
 import requests
+import time
 
 class MapBx:
     _mapbox_access_token = None
@@ -41,7 +42,7 @@ class MapBx:
                     latitude = res['center'][1]
                     print(f'id: {id}, lon: {longitude}, lat: {latitude}')
                     return id, longitude, latitude
-        else: print(f'\n{json_data}\n')
+        else: print(f'\n{json_data}')
         return id, None, None
 
 
@@ -62,10 +63,33 @@ class MapBx:
             if('code' in json_data and json_data['code'] == 'Ok'):
                 duration = json_data['trips'][0]['duration']
                 return a_id, b_id, duration
-            else:
-                print(json_data)
-                print('\n\n')
+            else: print(f'\n{json_data}')
         
+        return a_id, b_id, None
+
+
+    def get_duration(
+        self,
+        a_id: int, 
+        a_lon: float,
+        a_lat: float,
+        b_id: int, 
+        b_lon: float,
+        b_lat: float) -> tuple:
+
+        url = f"https://api.mapbox.com/optimized-trips/v1/mapbox/driving/{a_lon},{a_lat};{b_lon},{b_lat}?access_token={self._mapbox_access_token}"
+
+        for _ in range(4):
+            json_data = json_data = requests.get(url).json()
+            if('code' in json_data and json_data['code'] == 'Ok'):
+                duration = json_data['trips'][0]['duration']
+                print(f'a_id: {a_id}, b_id: {b_id}, dur: {duration}')
+                return a_id, b_id, duration
+            else: 
+                print(f'\n{json_data}. *** Trying again ***')
+                time.sleep(15)
+        
+        print('\n*** Attempts failed! ***')
         return a_id, b_id, None
 
     def get_token(self):
