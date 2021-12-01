@@ -205,9 +205,10 @@ class DB:
     def select_locations_ids_with_conditions(self, table_name: str) -> Cursor:
         cursor = self._sql_connection.cursor()
         cursor.execute(f"""
-            SELECT id
-            FROM {table_name} 
-            WHERE (population and longitude and latitude) IS NOT NULL""")
+            SELECT MIN(id)
+            FROM {table_name}
+            WHERE (longitude and latitude) IS NOT NULL
+            GROUP BY name""") # population and 
         return cursor
 
     
@@ -237,3 +238,13 @@ class DB:
         self._sql_connection)
 
         return data_frame
+    
+
+    def get_location_info_by_id(self, table_name: str, id: int) -> tuple:
+        cursor = self._sql_connection.cursor()
+        cursor.execute(f"""
+            SELECT *
+            FROM {table_name} 
+            WHERE id = {id} and (longitude and latitude) IS NOT NULL""")
+
+        return cursor.fetchone()
