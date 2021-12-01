@@ -4,7 +4,6 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import asyncio
 import aiohttp
-import time
 
 class DB:
     def __init__(self, db_name: str) -> None:
@@ -118,7 +117,7 @@ class DB:
         self._sql_connection.commit()
 
     
-    async def init_durations_table_async(self, table_name: str, locations: Cursor, get_duration: callable):
+    async def init_durations_table_async(self, table_name: str, locations: Cursor, get_duration_async: callable):
         locations_list = locations.fetchall()
 
         async with aiohttp.ClientSession() as session:
@@ -133,7 +132,7 @@ class DB:
                     b_lon = b_location[2]
                     b_lat = b_location[3]
 
-                    task = asyncio.ensure_future(get_duration(
+                    task = asyncio.ensure_future(get_duration_async(
                         session,
                         a_id,
                         a_lon,
@@ -156,6 +155,42 @@ class DB:
                     VALUES(?,?,?)
                 """, (a_id, b_id, duration_hours))
         self._sql_connection.commit()
+
+
+    def init_durations_table(self, table_name: str, locations: Cursor, get_duration: callable):
+        locations_list = locations.fetchall()
+        update_cursor = self._sql_connection.cursor()
+
+        for a_location in locations_list:
+            results = []
+            a_id = a_location[0]
+            a_lon = a_location[2]
+            a_lat = a_location[3]
+
+            for b_location in locations_list:
+                b_id = b_location[0]
+                b_lon = b_location[2]
+                b_lat = b_location[3]
+
+                result = get_duration(
+                    a_id,
+                    a_lon,
+                    a_lat,
+                    b_id,
+                    b_lon,
+                    b_lat
+                )
+                results.append(result)
+
+            for a_id, b_id, duration in results:
+                duration_hours = None
+                if(duration):
+                    duration_hours = duration / 3600
+                update_cursor.execute(f"""
+                        INSERT INTO {table_name}(a_location_id, b_location_id, duration_hours)
+                        VALUES(?,?,?)
+                    """, (a_id, b_id, duration_hours))
+            self._sql_connection.commit()
 
 
     def select_all_with_conditions(self, table_name: str) -> Cursor:
@@ -192,6 +227,7 @@ class DB:
         self._sql_connection)
 
         return data_frame
+
 
     def get_durations_pandas_df(self, table_name: str) -> DataFrame:
         data_frame = pd.read_sql(f"""
