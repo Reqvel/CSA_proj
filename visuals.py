@@ -4,11 +4,12 @@ import plotly.express as px
 def show_locations(data_frame: DataFrame, mapbox_token: str) -> None:
     fig = px.scatter_mapbox(
         data_frame, 
-        lat='latitude', 
-        lon='longitude', 
-        hover_name='name',
-        hover_data=['population'],
-        color_discrete_sequence=["fuchsia"],
+        lat='lat', 
+        lon='lon',
+        hover_name='location_name',
+        hover_data=['population', 'id'],
+        color='color',
+        # size='size',
         zoom=6)
 
     fig.update_layout(
