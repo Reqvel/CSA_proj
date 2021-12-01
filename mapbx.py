@@ -1,6 +1,5 @@
 import json
-
-from numpy import double
+import requests
 
 class MapBx:
     _mapbox_access_token = None
@@ -17,7 +16,7 @@ class MapBx:
         self._mapbox_access_token = json_object[self.access_token_key]
 
 
-    async def get_location_center(self, session, location_name: str, id: int) -> tuple:
+    async def get_location_center_async(self, session, location_name: str, id: int) -> tuple:
         url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{location_name}.json?country=by&access_token={self._mapbox_access_token}"
         
         async with session.get(url) as response:
@@ -31,7 +30,22 @@ class MapBx:
             return id, None, None
 
 
-    async def get_duration(
+    def get_location_center(self, location_name: str, id: int) -> tuple:
+        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{location_name}.json?country=by&access_token={self._mapbox_access_token}"
+        
+        json_data = json_data = requests.get(url).json()
+        if(json_data and json_data['features']):
+            for res in json_data['features']:
+                if(res['text'] == location_name):
+                    longitude = res['center'][0]
+                    latitude = res['center'][1]
+                    print(f'id: {id}, lon: {longitude}, lat: {latitude}')
+                    return id, longitude, latitude
+        else: print(f'\n{json_data}\n')
+        return id, None, None
+
+
+    async def get_duration_async(
         self,
         session,
         a_id: int, 
@@ -48,6 +62,9 @@ class MapBx:
             if('code' in json_data and json_data['code'] == 'Ok'):
                 duration = json_data['trips'][0]['duration']
                 return a_id, b_id, duration
+            else:
+                print(json_data)
+                print('\n\n')
         
         return a_id, b_id, None
 
