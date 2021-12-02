@@ -1,5 +1,4 @@
 from pandas.core.frame import DataFrame
-import random
 import pandas as pd
 
 class Cluster:
@@ -14,24 +13,22 @@ class Cluster:
         table_name: str,
         get_location_info_by_id: callable) -> DataFrame:
 
-        def get_random_color() -> str:
-            return "#"+''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-
         id_list = []
         location_name_list = []
         lon_list = []
         lat_list = []
         population_list = []
-        color_list = []
+        color_info_list = []
         size_list = []
 
-        number_of_colors = len(clusters)
-        colors = [get_random_color() for _ in range(number_of_colors)]
-        not_clustered_point_color = '#FF00FF'
-        point_size = 1;
+        clusters_num = len(clusters)
+        colors_info = [f'Cluster #{i}' for i in range(clusters_num)]
+        not_clustered_color_info = 'Not In Cluster'
+        point_size = 3;
+        cluster_size = 10;
 
         for i, cluster in enumerate(clusters):
-            color = colors[i]
+            color_info = colors_info[i]
             for point in cluster:
                 id, name, longitude, latitude, population = get_location_info_by_id(table_name, point)
                 id_list.append(id)
@@ -39,7 +36,7 @@ class Cluster:
                 lon_list.append(longitude)
                 lat_list.append(latitude)
                 population_list.append(population)
-                color_list.append(color)
+                color_info_list.append(color_info)
                 size_list.append(point_size)
 
         for point in not_clustered_points:
@@ -49,8 +46,8 @@ class Cluster:
             lon_list.append(longitude)
             lat_list.append(latitude)
             population_list.append(population)
-            color_list.append(not_clustered_point_color)
-            size_list.append(point_size)
+            color_info_list.append(not_clustered_color_info)
+            size_list.append(cluster_size)
 
         data = {
             'id': id_list,
@@ -58,7 +55,7 @@ class Cluster:
             'lon': lon_list,
             'lat': lat_list,
             'population': population_list,
-            'color': color_list,
+            'color_info': color_info_list,
             'size': size_list
         }
 
