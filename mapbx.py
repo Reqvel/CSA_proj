@@ -92,5 +92,6 @@ class MapBx:
         print('\n*** Attempts failed! ***')
         return a_id, b_id, None
 
+
     def get_token(self):
         return self._mapbox_access_token

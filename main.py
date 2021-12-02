@@ -42,7 +42,7 @@ def main():
     curs = db.select_locations_ids_with_conditions(locations_table_name)
     points = [point[0] for point in curs]
     durations = db.get_durations_pandas_df(durations_table_name)
-    duration_list = [0.5, 1, 1,5, 3, 4]
+    duration_list = [0, 1.5, 2, 4]
     for duration in duration_list:
         start = time.time()
         df = c.cluster_by_duration(points, durations, duration, locations_table_name, db.get_location_info_by_id)
