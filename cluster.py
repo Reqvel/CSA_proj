@@ -125,48 +125,51 @@ class Cluster:
             
             return None
 
+        def check_if_within_duration(point_a, point_b):
+            df = durations.loc[
+                    (durations['a_location_id'] == point_a) & 
+                    (durations['b_location_id'] == point_b) &
+                    (durations['duration_hours'] <= duration_hours)]
+            if df.empty: return False
+            else: return True
+            
+
         cluster_i = 0
         clusters.append(get_pair())
         point_added = True
-        cluster_added = False
-        cluster_filled = {cluster_i: False}
+        cluster_added = True
 
         while point_added or cluster_added:
+            point_added = False
             cluster_added = False
-            for i, cluster in enumerate(clusters):
-                while not cluster_filled[i]:
-                    point_added = False
-                    near_points = []
+            cluster = clusters[cluster_i]
+            near_points = []
+            for point in cluster:
+                near_points_df = durations.loc[
+                (durations['a_location_id'] == point) & (durations['duration_hours'] <= duration_hours)]
+                near_points.extend(near_points_df['b_location_id'].tolist())
+            for near_point in near_points:
+                if (near_point in in_cluster) and (not in_cluster[near_point]):
+                    within_duration = True
                     for point in cluster:
-                        near_points_df = durations.loc[
-                        (durations['a_location_id'] == point) & (durations['duration_hours'] <= duration_hours)]
-                        near_points.append(set(near_points_df['b_location_id'].tolist()))
-                    points_intersection = None
-                    for iter_points in near_points:
-                        if points_intersection == None:
-                            points_intersection = iter_points
-                            continue
-                        points_intersection &= iter_points
-                    if points_intersection:
-                        for point in points_intersection:
-                            if (point in in_cluster) and (not in_cluster[point]):
-                                cluster.append(point)
-                                in_cluster[point] = True
-                                point_added = True
-
-                    if not point_added:
-                        cluster_filled[cluster_i] = True
-                
+                        within = check_if_within_duration(near_point, point)
+                        if not within:
+                            within_duration = False
+                            break
+                    if within_duration:
+                        cluster.append(near_point)
+                        in_cluster[near_point] = True
+                        point_added = True
+            if not point_added:
                 new_cluster = get_pair()
                 if new_cluster:
                     clusters.append(new_cluster)
                     cluster_added = True
                     cluster_i += 1
-                    cluster_filled[cluster_i] = False
-
+                  
         not_clustered_points = []
         for point, is_in_cluster in list(in_cluster.items()):
             if not is_in_cluster:
                 not_clustered_points.append(point)
-
+        
         return self.get_clusters_df(clusters, not_clustered_points, table_name, get_location_info_by_id)
