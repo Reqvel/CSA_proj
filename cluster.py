@@ -7,12 +7,12 @@ class Cluster:
         cluster_lat = 0
         cluster_population = 0
         for lo, la, pop in zip(lon, lat, population):
-            cluster_lon += lo
-            cluster_lat += la
+            cluster_lon += lo * pop
+            cluster_lat += la * pop
             cluster_population += pop
         
-        cluster_lon /= len(lon)
-        cluster_lat /= len(lat)
+        cluster_lon /= cluster_population
+        cluster_lat /= cluster_population
 
         return cluster_lon, cluster_lat, cluster_population
         
