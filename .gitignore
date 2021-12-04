@@ -1,4 +1,5 @@
 csvs/
+xls/
 *.csv
 *.db
 *.json

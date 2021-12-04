@@ -42,13 +42,16 @@ def main():
     curs = db.select_locations_ids_with_conditions(locations_table_name)
     points = [point[0] for point in curs]
     durations = db.get_durations_pandas_df(durations_table_name)
-    duration_list = [0, 1.5, 2, 4]
+    duration_list = [0.5, 1, 1.5, 4]
     for duration in duration_list:
         start = time.time()
         df = c.cluster_by_duration(points, durations, duration, locations_table_name, db.get_location_info_by_id)
         show_locations(df, mpbx.get_token(), duration)
         end = time.time()
         print(f'Whitin {duration} Hours. Time Taken To Build: {end - start} sec.')
+        unq = str(start).replace('.', '')
+        file_name = f'xls/locations_within_{duration}_hours_{unq}.xlsx'
+        df.to_excel(file_name, columns=['id', 'location_name', 'population', 'color_info'])
 
     # FIND INFO ABOUT LOCATION
     # df_loc = db.get_locations_pandas_df(locations_table_name)
@@ -57,7 +60,7 @@ def main():
 
     # FIND DURATION BETWEEN LOCATIONS
     # dfdr = db.get_durations_pandas_df(durations_table_name)
-    # df = dfdr.loc[(dfdr['a_location_id'] == 1) & (dfdr['b_location_id'] == 991)]
+    # df = dfdr.loc[(dfdr['a_location_id'] == 1) & (dfdr['b_location_id'] == 18693)]
     # print(df)
 
     db.disconnect()

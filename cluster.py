@@ -63,13 +63,13 @@ class Cluster:
                                                                                 cluster_lat_list, 
                                                                                 cluster_population_list)
 
-            id_list.extend([*cluster_id_list, 0])
-            location_name_list.extend([*cluster_location_name_list, 'Centroid'])
-            lon_list.extend([*cluster_lon_list, cluster_lon])
-            lat_list.extend([*cluster_lat_list, cluster_lat])
-            population_list.extend([*cluster_population_list, cluster_population])
-            color_info_list.extend([*cluster_color_info_list, color_info])
-            size_list.extend([*cluster_size_list, centroid_size])
+            id_list.extend([i, *cluster_id_list])
+            location_name_list.extend(['Centroid', *cluster_location_name_list])
+            lon_list.extend([cluster_lon, *cluster_lon_list])
+            lat_list.extend([cluster_lat, *cluster_lat_list])
+            population_list.extend([cluster_population, *cluster_population_list])
+            color_info_list.extend([color_info, *cluster_color_info_list])
+            size_list.extend([centroid_size, *cluster_size_list])
 
         for point in not_clustered_points:
             id, name, longitude, latitude, population = get_location_info_by_id(table_name, point)
